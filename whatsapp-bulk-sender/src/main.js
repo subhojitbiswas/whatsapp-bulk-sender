@@ -4,7 +4,9 @@ const path = require('path')
 const isDev = require('electron-is-dev')
 const { Client, MessageMedia, Buttons, LocalAuth, List, NoAuth } = require('whatsapp-web.js');
 const fs = require('fs');
-
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
 
 const client = new Client({ puppeteer: { headless: true }, authStrategy: new LocalAuth() });
 
@@ -30,10 +32,12 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    backgroundColor: "#263238",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      preload: path.join(__dirname, 'preload.js')
     },
   });
   mainWindow.loadURL(
@@ -46,17 +50,17 @@ const createWindow = () => {
 
 client.on('qr', (qr) => {
   console.log('QR RECEIVED', qr);
-  mainWindow.webContents.send('login', qr);
+  mainWindow.webContents.send('loginQr', qr);
 });
 
 client.on('ready', () => {
   console.log('Client is ready!');
-  mainWindow.webContents.send('login', 'success');
+  mainWindow.webContents.send('loginQr', 'success');
 });
 
 client.on('disconnected', (reason) => {
   console.log('Client is disconnected!', reason);
-  mainWindow.webContents.send('logout', 'success');
+  mainWindow.webContents.send('disconnected', 'success');
 });
 
 
@@ -82,10 +86,10 @@ ipcMain.on('login', (event, arg) => {
 ipcMain.on('logout', (event, arg) => {
   client.logout().then(() => {
     console.log('Logged out!');
-    mainWindow.webContents.send('logout', 'success');
+    event.reply('logout', 'success');
   }).catch((error) => {
     console.log('Error logging out:', error);
-    mainWindow.webContents.send('logout', error);
+    event.reply('logout', error);
   });
 })
 
@@ -96,7 +100,7 @@ ipcMain.on('group', async (event, arg) => {
   const groupName = [];
   groupChat.forEach((grp) => groupName.push({ "grpName": grp.name, "participants": grp.participants }));
   console.log('All Chats:', groupName);
-  mainWindow.webContents.send('group', groupName);
+  event.reply('group', groupName);
 })
 
 ipcMain.on('import', async (event, data) => {
@@ -115,7 +119,7 @@ ipcMain.on('import', async (event, data) => {
     return ({ 'number': dt, 'state': valid });
   }))
   console.log('result = ', result);
-  mainWindow.webContents.send('import', result);
+  event.reply('import', result);
 })
 
 ipcMain.on('sendMessage', async (event, data) => {
@@ -163,7 +167,7 @@ ipcMain.on('sendMessage', async (event, data) => {
     return { number: dt, status: sendStatus }
   }))
   console.log('result = ', result);
-  mainWindow.webContents.send('sendMessage', result);
+  event.reply('sendMessage', result);
 })
 
 ipcMain.on('contact', async (event, arg) => {
@@ -172,7 +176,7 @@ ipcMain.on('contact', async (event, arg) => {
     return ({ id: con.id, "name": con.name });
   })
   console.log("contacts ", contacts);
-  mainWindow.webContents.send('contact', contacts);
+  event.reply('contact', contacts);
 })
 
 
