@@ -2,33 +2,33 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, logoff } from './store/loginSlice';
-const { ipcRenderer } = window.require('electron');
-const { app } = window.require('@electron/remote');
 
 const Login = () => {
     const status = useSelector((state) => state.login.status);
     const dispatch = useDispatch();
     const [qr, setQr] = useState('');
     const loginButtonHandler = () => {
-        console.log("button is clicked");
-        ipcRenderer.send('login')
+        console.log("login button is clicked");
+        window.api.login();
     }
-    const logoutButtonHandler = () => {
-        console.log("button is clicked");
-        ipcRenderer.send('logout')
-    }
-    ipcRenderer.on('login', (event, data) => {
-        console.log('Event ', event, ' Data ', data);
-        setQr(data);
-    })
-    ipcRenderer.on('logout', (event, data) => {
-        console.log('Log out Event ', event, ' Data ', data);
-        if (data === 'success') {
+    const logoutButtonHandler = async () => {
+        console.log("logout button is clicked");
+        let value = await window.api.logout();
+        if (value === 'success') {
             dispatch(logoff());
         } else {
-            console.log("error in logging out ", data);
+            console.log("error in logging out ", value);
         }
+    }
+    window.api.loginQr((event, value) => {
+        console.log('Event ', event, ' value ', value);
+        setQr(value);
     })
+    window.api.disconnected((event, value) => {
+        dispatch(logoff());
+        console.log('Log out Event ', event, ' value ', value);        
+    })
+
     const Qrcode = () => {
         if (qr == 'success') {
             dispatch(login());
