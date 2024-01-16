@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld("api", {
   disconnected: (callback) => ipcRenderer.on("disconnected", callback),  
 });
 
-contextBridge.exposeInMainWorld("electronAPI", {
-  testIncoming: () => ipcRenderer.invoke("testIncoming"),
-  testOutgoing: (callback) => ipcRenderer.on("testOutgoing", callback),
-});
+// contextBridge.exposeInMainWorld("electronAPI", {
+//   testIncoming: () => ipcRenderer.invoke("testIncoming"),
+//   testOutgoing: (callback) => ipcRenderer.on("testOutgoing", callback),
+// });

@@ -1,21 +1,16 @@
 const { app, BrowserWindow } = require("electron");
 const { ipcMain } = require("electron");
 const path = require("path");
-// const isDev = require("electron-is-dev");
 const {
   Client,
   MessageMedia,
-  Buttons,
-  LocalAuth,
-  List,
   NoAuth,
 } = require("whatsapp-web.js");
 const fs = require("fs");
-// require("@electron/remote/main").initialize();
 
 const client = new Client({
   puppeteer: { headless: true },
-  authStrategy: new LocalAuth(),
+  authStrategy: new NoAuth(),
 });
 
 if (require("electron-squirrel-startup")) {
@@ -28,7 +23,7 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    backgroundColor: "#263238",
+    // backgroundColor: "#263238",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -65,6 +60,7 @@ client.on("message", async (msg) => {
 });
 
 const login = (arg) => {
+  console.log('Entered in client login ipcmain');
   client.initialize();
 };
 
